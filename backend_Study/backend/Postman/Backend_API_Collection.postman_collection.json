@@ -1,0 +1,429 @@
+{
+  "info": {
+    "_postman_id": "8b3d3e5a-1a7c-4b9f-9d5e-2c7a6f1b4d90",
+    "name": "Backend API Collection",
+    "description": "Collection built from the supplied Express route files. Set baseURL to your server origin.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseURL",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "postId",
+      "value": ""
+    },
+    {
+      "key": "username",
+      "value": ""
+    },
+    {
+      "key": "email",
+      "value": ""
+    },
+    {
+      "key": "password",
+      "value": "Test@12345"
+    }
+  ],
+  "item": [
+    {
+      "name": "Register User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/v1/users/register",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "users",
+            "register"
+          ]
+        },
+        "description": "Generates a unique username and email before each registration request.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{username}}\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const stamp = Date.now();",
+              "pm.collectionVariables.set(\"username\", \"postman_user_\" + stamp);",
+              "pm.collectionVariables.set(\"email\", \"postman_\" + stamp + \"@example.com\");"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Registration returns a successful status\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+              "pm.test(\"Response is valid JSON\", () => pm.response.to.have.jsonBody());"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/v1/users/login",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "users",
+            "login"
+          ]
+        },
+        "description": "Uses credentials from Register User and attempts to save the returned JWT.",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Login returns a successful status\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+              "pm.test(\"Response is valid JSON\", () => pm.response.to.have.jsonBody());",
+              "const d = pm.response.json();",
+              "const t = d.token || d.accessToken || d.jwt ||",
+              "  (d.data && (d.data.token || d.data.accessToken || d.data.jwt)) ||",
+              "  (d.user && (d.user.token || d.user.accessToken));",
+              "if (t) pm.collectionVariables.set(\"token\", t);",
+              "else console.warn(\"JWT not found automatically. Inspect login response and set collection variable 'token' manually.\");"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get Current User",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/api/v1/users/me",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "users",
+            "me"
+          ]
+        },
+        "description": "Protected route; requires JWT from Login User.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Current-user request succeeds\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+              "pm.test(\"Response is valid JSON\", () => pm.response.to.have.jsonBody());"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create Post",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/v1/posts/create",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "posts",
+            "create"
+          ]
+        },
+        "description": "Protected route. Sample fields match the post payload visible in your screenshots; confirm against your controller.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Postman Test Post\",\n  \"description\": \"Created using Postman\",\n  \"age\": 24\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Create post succeeds\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+              "pm.test(\"Response is valid JSON\", () => pm.response.to.have.jsonBody());",
+              "const d = pm.response.json();",
+              "const p = d.post || d.data || d;",
+              "const id = p._id || p.id || d.postId || d._id || d.id;",
+              "if (id) pm.collectionVariables.set(\"postId\", String(id));",
+              "else console.warn(\"Post ID not detected. Copy the ID from the response into collection variable 'postId'.\");"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get All Posts",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/api/v1/posts/get",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "posts",
+            "get"
+          ]
+        },
+        "description": "Public route."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Get posts succeeds\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+              "pm.test(\"Response is valid JSON\", () => pm.response.to.have.jsonBody());",
+              "const d = pm.response.json();",
+              "const posts = d.posts || d.data || d;",
+              "pm.test(\"Posts are returned as an array\", () => pm.expect(posts).to.be.an(\"array\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Update Post",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseURL}}/api/v1/posts/update/{{postId}}",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "posts",
+            "update",
+            "{{postId}}"
+          ]
+        },
+        "description": "Protected route. Uses postId saved by Create Post.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Updated Postman Test Post\",\n  \"description\": \"Updated using Postman\",\n  \"age\": 25\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Update post succeeds\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+              "pm.test(\"Response is valid JSON\", () => pm.response.to.have.jsonBody());"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delete Post",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/api/v1/posts/delete/{{postId}}",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "posts",
+            "delete",
+            "{{postId}}"
+          ]
+        },
+        "description": "Protected route. Uses postId saved by Create Post.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Delete post succeeds\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+              "pm.test(\"Response is valid JSON\", () => pm.response.to.have.jsonBody());"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Logout User",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/api/v1/users/logout",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "users",
+            "logout"
+          ]
+        },
+        "description": "Route exists in supplied user router. Bearer auth is included; remove it if your logout controller does not require authentication.",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Logout returns a successful status\", () => pm.expect(pm.response.code).to.be.within(200, 299));",
+              "pm.test(\"Response is valid JSON\", () => pm.response.to.have.jsonBody());"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
