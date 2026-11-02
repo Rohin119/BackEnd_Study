@@ -1,11 +1,27 @@
-import { Router } from 'express';
-import { loginUser, logoutuser, registerUser } from '../controllers/user.controller.js';
 
-const router = Router();
+import express from "express";
 
-router.route('/register').post(registerUser);
-router.route('/login').post(loginUser);
-router.route('/logout').post(logoutuser);
+import {
+    registerUser,
+    loginUser,
+    logoutuser
+} from "../controllers/user.controller.js";
 
+import verifyToken from "../middlewares/auth.middleware.js";
+
+const router = express.Router();
+
+// Public routes
+router.post("/register", registerUser);
+router.post("/login", loginUser);
+router.post("/logout", logoutuser);
+
+// Protected route
+router.get("/me", verifyToken, (req, res) => {
+    res.status(200).json({
+        message: "Authenticated user details",
+        user: req.user
+    });
+});
 
 export default router;

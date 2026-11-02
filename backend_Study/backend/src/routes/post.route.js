@@ -1,11 +1,27 @@
-import { Router } from 'express';
-import { createPost, deletePost, getPosts, updatePost } from '../controllers/post.controller.js';
 
-const router = Router();
+import express from "express";
 
-router.route('/create').post(createPost);
-router.route('/getPosts').get(getPosts);
-router.route('/update/:id').patch(updatePost);
-router.route('/delete/:id').delete(deletePost);
+import {
+    createPost,
+    getPosts,
+    updatePost,
+    deletePost
+} from "../controllers/post.controller.js";
+
+import verifyToken from "../middlewares/auth.middleware.js";
+
+const router = express.Router();
+
+// GET ALL POSTS (Public Route)
+router.get("/get", getPosts);
+
+// CREATE POST (Protected Route)
+router.post("/create", verifyToken, createPost);
+
+// UPDATE POST (Protected Route)
+router.patch("/update/:id", verifyToken, updatePost);
+
+// DELETE POST (Protected Route)
+router.delete("/delete/:id", verifyToken, deletePost);
 
 export default router;
